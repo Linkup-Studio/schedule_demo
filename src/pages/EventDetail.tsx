@@ -20,9 +20,9 @@ export default function EventDetail() {
   const event = getEvents().find((e) => e.id === id);
   if (!event) {
     return (
-      <div className="p-4 text-center text-gray-400 mt-20">
+      <div className="p-4 text-center text-[var(--color-muted)] mt-20">
         予定が見つかりません
-        <button onClick={() => navigate('/events')} className="block mx-auto mt-4 text-blue-500">
+        <button onClick={() => navigate('/events')} className="block mx-auto mt-4 text-[var(--color-practice)]">
           一覧に戻る
         </button>
       </div>
@@ -33,24 +33,28 @@ export default function EventDetail() {
   const attend = attendanceList.filter((a) => a.status === 'attend');
   const absent = attendanceList.filter((a) => a.status === 'absent');
   const undecided = attendanceList.filter((a) => a.status === 'undecided');
+  const total = event.targetGrades.reduce((s, g) => {
+    const key = `grade${g}` as keyof typeof currentTeam.playerCounts;
+    return s + (currentTeam.playerCounts[key] || 0);
+  }, 0);
+  const noAnswer = Math.max(0, total - attendanceList.length);
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
-    const days = ['日', '月', '火', '水', '木', '金', '土'];
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${days[d.getDay()]})`;
+    const days = ['日','月','火','水','木','金','土'];
+    return `${d.getMonth()+1}月${d.getDate()}日(${days[d.getDay()]})`;
   };
-
   const formatTime = (iso: string) => {
     const d = new Date(iso);
-    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   };
 
-  const eventTypeLabels: Record<string, { label: string; color: string }> = {
-    official: { label: '公式戦', color: 'var(--color-official)' },
-    practice: { label: '練習試合', color: 'var(--color-practice)' },
-    other: { label: 'その他', color: 'var(--color-other)' },
+  const typeLabels: Record<string, { label: string; cls: string }> = {
+    official: { label: '公式戦', cls: 'bg-[var(--color-official)] text-white' },
+    practice: { label: '練習試合', cls: 'bg-[var(--color-practice)] text-white' },
+    other: { label: 'その他', cls: 'bg-[var(--color-other)] text-white' },
   };
-  const typeInfo = eventTypeLabels[event.eventType];
+  const typeInfo = typeLabels[event.eventType];
 
   const handleAnswer = (status: AttendanceStatus) => {
     if (!name.trim()) return;
@@ -70,127 +74,115 @@ export default function EventDetail() {
   };
 
   return (
-    <div className="p-4 space-y-4 pb-24">
-      {/* 戻るボタン */}
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-gray-500 text-sm">
-        <ArrowLeft size={18} /> 戻る
+    <div className="px-4 py-4 space-y-3 pb-24">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-[var(--color-muted)] text-[13px] font-bold active:opacity-60">
+        <ArrowLeft className="w-4 h-4" /> 戻る
       </button>
 
       {/* イベント情報 */}
-      <div className="bg-white rounded-xl p-5 shadow-sm space-y-3">
-        <div className="flex items-center gap-2">
-          <span
-            className="text-xs font-bold text-white px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: typeInfo.color }}
-          >
-            {typeInfo.label}
-          </span>
-          <span className="text-xs text-gray-400">対象: 中{event.targetGrades.join('・')}</span>
+      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 space-y-3 animate-fade-in-up">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${typeInfo.cls}`}>{typeInfo.label}</span>
+          {event.targetGrades.map((g) => (
+            <span key={g} className="text-[9px] font-bold text-[var(--color-muted)] bg-gray-100 px-1.5 py-0.5 rounded">中{g}</span>
+          ))}
         </div>
 
-        <h1 className="text-xl font-bold text-gray-900">{event.title}</h1>
+        <h1 className="text-[17px] font-black">{event.title}</h1>
 
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-1.5 text-[12px] text-[var(--color-muted)]">
           <div className="flex items-center gap-2">
-            <Clock size={16} className="text-gray-400" />
-            <span>{formatDate(event.dateStart)} {formatTime(event.dateStart)}</span>
-            {event.dateEnd && <span>〜 {formatTime(event.dateEnd)}</span>}
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span>{formatDate(event.dateStart)} {formatTime(event.dateStart)}
+            {event.dateEnd && ` 〜 ${formatTime(event.dateEnd)}`}</span>
           </div>
           <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-gray-400" />
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
             <span>{event.venueName}</span>
           </div>
           {event.opponent && (
             <div className="flex items-center gap-2">
-              <Swords size={16} className="text-gray-400" />
+              <Swords className="w-3.5 h-3.5 shrink-0" />
               <span>vs {event.opponent}</span>
             </div>
           )}
           {event.meetingTime && (
             <div className="flex items-center gap-2">
-              <Clock size={16} className="text-gray-400" />
+              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span>集合 {event.meetingTime} {event.meetingPlace && `| ${event.meetingPlace}`}</span>
             </div>
           )}
           {event.items && (
             <div className="flex items-start gap-2">
-              <Package size={16} className="text-gray-400 mt-0.5" />
+              <Package className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{event.items}</span>
             </div>
           )}
           {event.notes && (
             <div className="flex items-start gap-2">
-              <StickyNote size={16} className="text-gray-400 mt-0.5" />
+              <StickyNote className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{event.notes}</span>
             </div>
           )}
         </div>
 
         {event.rsvpDeadline && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-center text-sm text-red-600 font-bold">
-            ⏰ 締切: {new Date(event.rsvpDeadline).getMonth() + 1}月{new Date(event.rsvpDeadline).getDate()}日まで
+          <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-center text-[12px] text-[var(--color-error)] font-bold">
+            ⏰ 回答締切: {new Date(event.rsvpDeadline).getMonth()+1}月{new Date(event.rsvpDeadline).getDate()}日まで
           </div>
         )}
       </div>
 
       {/* 出欠サマリー */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h2 className="text-sm font-bold text-gray-500 mb-3">出欠状況</h2>
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="bg-green-50 rounded-lg p-2">
-            <div className="text-xl font-bold text-green-700">{attend.length}</div>
-            <div className="text-xs text-green-600">参加</div>
+      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 animate-fade-in-up delay-1">
+        <h2 className="text-[13px] font-black mb-2.5">出欠状況</h2>
+        <div className="grid grid-cols-4 gap-1.5 text-center">
+          <div className="bg-green-50 rounded-xl py-2">
+            <div className="text-[18px] font-black text-[var(--color-attend)]">{attend.length}</div>
+            <div className="text-[9px] font-bold text-[var(--color-attend)]">参加</div>
           </div>
-          <div className="bg-red-50 rounded-lg p-2">
-            <div className="text-xl font-bold text-red-700">{absent.length}</div>
-            <div className="text-xs text-red-600">欠席</div>
+          <div className="bg-red-50 rounded-xl py-2">
+            <div className="text-[18px] font-black text-[var(--color-absent)]">{absent.length}</div>
+            <div className="text-[9px] font-bold text-[var(--color-absent)]">欠席</div>
           </div>
-          <div className="bg-yellow-50 rounded-lg p-2">
-            <div className="text-xl font-bold text-yellow-700">{undecided.length}</div>
-            <div className="text-xs text-yellow-600">未定</div>
+          <div className="bg-yellow-50 rounded-xl py-2">
+            <div className="text-[18px] font-black text-[var(--color-undecided)]">{undecided.length}</div>
+            <div className="text-[9px] font-bold text-[var(--color-undecided)]">未定</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2">
-            <div className="text-xl font-bold text-gray-500">
-              {(() => {
-                const totalPlayers = event.targetGrades.reduce((sum, g) => {
-                  const key = `grade${g}` as keyof typeof currentTeam.playerCounts;
-                  return sum + (currentTeam.playerCounts[key] || 0);
-                }, 0);
-                return Math.max(0, totalPlayers - attendanceList.length);
-              })()}
-            </div>
-            <div className="text-xs text-gray-500">未回答</div>
+          <div className="bg-gray-50 rounded-xl py-2">
+            <div className="text-[18px] font-black text-[var(--color-no-answer)]">{noAnswer}</div>
+            <div className="text-[9px] font-bold text-[var(--color-no-answer)]">未回答</div>
           </div>
         </div>
       </div>
 
       {/* 出欠回答フォーム */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h2 className="text-sm font-bold text-gray-500 mb-3">出欠を回答する</h2>
+      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 animate-fade-in-up delay-2">
+        <h2 className="text-[13px] font-black mb-2.5">出欠を回答する</h2>
 
         {submitted && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 mb-3">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 text-[12px] text-[var(--color-success)] font-bold mb-2.5 text-center">
             ✅ 回答を送信しました！
           </div>
         )}
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-600 mb-3 text-center">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 text-[10px] text-blue-600 mb-3 text-center font-bold">
           🔄 同じお名前で再送信すると、回答を修正できます
         </div>
 
         {showForm ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="お名前を入力"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+              className="w-full bg-[var(--color-background)] border border-[var(--color-border)] px-4 py-3 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             <select
               value={grade}
               onChange={(e) => setGrade(Number(e.target.value))}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+              className="w-full bg-[var(--color-background)] border border-[var(--color-border)] px-4 py-3 rounded-xl text-[14px] focus:outline-none"
             >
               <option value={1}>中1</option>
               <option value={2}>中2</option>
@@ -201,14 +193,14 @@ export default function EventDetail() {
               <button
                 onClick={() => handleAnswer('attend')}
                 disabled={!name.trim()}
-                className="py-4 rounded-xl text-lg font-bold bg-green-500 text-white disabled:opacity-40 active:scale-95 transition-transform"
+                className="py-3.5 rounded-xl text-[15px] font-black bg-[var(--color-attend)] text-white disabled:opacity-30 active:scale-95 transition-transform shadow-sm"
               >
                 ○ 参加
               </button>
               <button
                 onClick={() => handleAnswer('absent')}
                 disabled={!name.trim()}
-                className="py-4 rounded-xl text-lg font-bold bg-red-500 text-white disabled:opacity-40 active:scale-95 transition-transform"
+                className="py-3.5 rounded-xl text-[15px] font-black bg-[var(--color-absent)] text-white disabled:opacity-30 active:scale-95 transition-transform shadow-sm"
               >
                 × 欠席
               </button>
@@ -220,7 +212,7 @@ export default function EventDetail() {
                   handleAnswer('undecided');
                 }}
                 disabled={!name.trim()}
-                className="py-4 rounded-xl text-lg font-bold bg-yellow-500 text-white disabled:opacity-40 active:scale-95 transition-transform"
+                className="py-3.5 rounded-xl text-[15px] font-black bg-[var(--color-undecided)] text-white disabled:opacity-30 active:scale-95 transition-transform shadow-sm"
               >
                 △ 未定
               </button>
@@ -229,7 +221,7 @@ export default function EventDetail() {
         ) : (
           <button
             onClick={() => { setShowForm(true); setSubmitted(false); }}
-            className="w-full py-3 border-2 border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50"
+            className="w-full py-3 border-2 border-[var(--color-border)] rounded-xl text-[var(--color-muted)] text-[13px] font-bold active:bg-gray-50"
           >
             別の人の回答を追加する
           </button>
@@ -238,29 +230,25 @@ export default function EventDetail() {
 
       {/* 回答済み一覧 */}
       {attendanceList.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h2 className="text-sm font-bold text-gray-500 mb-3">回答済み</h2>
-          <div className="space-y-2">
+        <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 animate-fade-in-up delay-3">
+          <h2 className="text-[13px] font-black mb-2.5">回答済み</h2>
+          <div className="space-y-0">
             {attendanceList.map((a) => (
-              <div key={a.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <div key={a.id} className="flex items-center justify-between py-2.5 border-b border-[var(--color-border)] last:border-0">
                 <div>
-                  <span className="font-bold text-gray-800 text-sm">{a.respondentName}</span>
-                  <span className="text-xs text-gray-400 ml-2">中{a.grade}</span>
+                  <span className="font-bold text-[13px]">{a.respondentName}</span>
+                  <span className="text-[10px] text-[var(--color-muted)] ml-1.5">中{a.grade}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`text-sm font-bold ${
-                      a.status === 'attend'
-                        ? 'text-green-600'
-                        : a.status === 'absent'
-                        ? 'text-red-600'
-                        : 'text-yellow-600'
-                    }`}
-                  >
+                  <span className={`text-[12px] font-black ${
+                    a.status === 'attend' ? 'text-[var(--color-attend)]'
+                    : a.status === 'absent' ? 'text-[var(--color-absent)]'
+                    : 'text-[var(--color-undecided)]'
+                  }`}>
                     {a.status === 'attend' ? '○ 参加' : a.status === 'absent' ? '× 欠席' : '△ 未定'}
                   </span>
                   {isAdmin && (
-                    <button className="text-gray-300 hover:text-red-400 text-xs">🗑️</button>
+                    <button className="text-[var(--color-no-answer)] hover:text-[var(--color-error)] text-[11px]">🗑️</button>
                   )}
                 </div>
               </div>

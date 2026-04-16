@@ -7,7 +7,6 @@ import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
 import Announcements from './pages/Announcements';
 import AnnouncementDetail from './pages/AnnouncementDetail';
-import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -21,7 +20,6 @@ export default function App() {
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/announcements" element={<Announcements />} />
             <Route path="/announcements/:id" element={<AnnouncementDetail />} />
-            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
