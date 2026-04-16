@@ -1,14 +1,23 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeam } from '../contexts/TeamContext';
-import type { Team } from '../data/types';
 
 export default function TeamSelect() {
   const { allTeams, setCurrentTeam } = useTeam();
   const navigate = useNavigate();
+  const [input, setInput] = useState('');
+  const [error, setError] = useState(false);
 
-  const handleSelect = (team: Team) => {
-    setCurrentTeam(team);
-    navigate('/passphrase');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const matched = allTeams.find((t) => t.passphrase === input.trim());
+    if (matched) {
+      setCurrentTeam(matched);
+      navigate('/dashboard');
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+    }
   };
 
   return (
@@ -16,33 +25,38 @@ export default function TeamSelect() {
       <div className="text-center mb-10">
         <div className="text-5xl mb-4">⚾</div>
         <h1 className="text-3xl font-bold text-white mb-2">BallPark</h1>
-        <p className="text-slate-400">チームを選んでください</p>
+        <p className="text-slate-400">チームの合言葉を入力してください</p>
       </div>
 
-      <div className="w-full max-w-sm space-y-4">
-        {allTeams.map((team) => (
+      <div className="w-full max-w-sm">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="password"
+            value={input}
+            onChange={(e) => { setInput(e.target.value); setError(false); }}
+            placeholder="合言葉"
+            className={`w-full px-5 py-4 border-2 rounded-2xl text-center text-lg bg-white focus:outline-none transition-colors ${
+              error ? 'border-red-400 bg-red-50' : 'border-white/20 focus:border-blue-400'
+            }`}
+            autoFocus
+          />
+          {error && (
+            <p className="text-red-400 text-sm text-center">合言葉が一致しません</p>
+          )}
           <button
-            key={team.id}
-            onClick={() => handleSelect(team)}
-            className="w-full bg-white rounded-xl p-5 flex items-center gap-4 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            type="submit"
+            className="w-full py-4 rounded-2xl bg-white text-slate-800 font-bold text-lg hover:bg-gray-100 transition-colors active:scale-[0.97]"
           >
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0"
-              style={{ backgroundColor: team.themeColor }}
-            >
-              {team.name[0]}
-            </div>
-            <div className="text-left">
-              <div className="font-bold text-gray-900 text-lg">{team.name}</div>
-              <div className="text-sm text-gray-500">{team.description}</div>
-            </div>
+            入室する
           </button>
-        ))}
-      </div>
+        </form>
 
-      <p className="text-slate-500 text-xs mt-10">
-        マルチテナント デモ — 1つのアプリで複数チームを管理
-      </p>
+        <div className="mt-8 p-4 bg-white/10 rounded-xl text-sm text-slate-400 text-center space-y-1">
+          <p>💡 デモ用合言葉:</p>
+          <p className="text-slate-300">一色SKクラブ → <strong>sk2026</strong></p>
+          <p className="text-slate-300">港スターズ → <strong>stars2026</strong></p>
+        </div>
+      </div>
     </div>
   );
 }

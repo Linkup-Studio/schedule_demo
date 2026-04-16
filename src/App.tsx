@@ -2,7 +2,6 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TeamProvider } from './contexts/TeamContext';
 import Layout from './components/Layout';
 import TeamSelect from './pages/TeamSelect';
-import Passphrase from './pages/Passphrase';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
@@ -16,7 +15,6 @@ export default function App() {
       <TeamProvider>
         <Routes>
           <Route path="/" element={<TeamSelect />} />
-          <Route path="/passphrase" element={<Passphrase />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/events" element={<Events />} />
